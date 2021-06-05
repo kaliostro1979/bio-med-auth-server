@@ -33,8 +33,8 @@ function isAuthenticated({email, password}){
 // Register New User
 server.post('/auth/register', (req, res) => {
   console.log("register endpoint called; request body:");
-  console.log(req.body);
-  const {email, password} = req.body;
+
+  const {email, password, fullName, date, phone, gender} = req.body;
 
   if(isAuthenticated({email, password}) === true) {
     const status = 401;
@@ -53,12 +53,11 @@ fs.readFile("./users.json", (err, data) => {
 
     // Get current users data
     var data = JSON.parse(data.toString());
-
-    // Get the id of last user
+  // Get the id of last user
     var last_item_id = data.users[data.users.length-1].id;
 
     //Add new user
-    data.users.push({id: last_item_id + 1, email: email, password: password}); //add some data
+    data.users.push({id: last_item_id + 1, email: email, password: password, fullName: fullName, date: date, phone: phone, gender: gender}); //add some data
     var writeData = fs.writeFile("./users.json", JSON.stringify(data), (err, result) => {  // WRITE
         if (err) {
           const status = 401
@@ -70,7 +69,7 @@ fs.readFile("./users.json", (err, data) => {
 });
 
 // Create token for new user
-  const access_token = createToken({email, password})
+  const access_token = createToken({email, password, fullName, date, phone, gender})
   console.log("Access Token:" + access_token);
   res.status(200).json({access_token})
 })
@@ -78,7 +77,7 @@ fs.readFile("./users.json", (err, data) => {
 // Login to one of the users from ./users.json
 server.post('/auth/login', (req, res) => {
   console.log("login endpoint called; request body:");
-  console.log(req.body);
+
   const {email, password} = req.body;
   if (isAuthenticated({email, password}) === false) {
     const status = 401
@@ -86,12 +85,26 @@ server.post('/auth/login', (req, res) => {
     res.status(status).json({status, message})
     return
   }
-  const access_token = createToken({email, password})
-  console.log("Access Token:" + access_token);
-  res.status(200).json({access_token})
+
+  fs.readFile('./users.json', (err, data) => {
+    if (err) throw err;
+    let json = JSON.parse(data);
+    let currentUser = null;
+    json.users.forEach((user)=>{
+      if (user.email === email && user.password === password){
+        currentUser = user
+      }
+    })
+
+    const access_token = createToken(currentUser)
+
+    res.status(200).json({access_token, user:currentUser})
+  });
+
 })
 
 server.use(/^(?!\/auth).*$/,  (req, res, next) => {
+
   if (req.headers.authorization === undefined || req.headers.authorization.split(' ')[0] !== 'Bearer') {
     const status = 401
     const message = 'Error in authorization format'
