@@ -28,6 +28,7 @@ function verifyToken(token){
 // Check if the user exists in database
 
 function isAuthenticated({loginEmail, loginPassword}){
+
   return userdb.users.findIndex(user => user.email === loginEmail && user.password === loginPassword) !== -1
 }
 
@@ -44,8 +45,7 @@ server.post('/auth/register', (req, res) => {
     registerGender
   } = req.body;
 
-  if(isAuthenticated({registerEmail, registerPassword}) === true) {
-
+  if(isAuthenticated({loginEmail: registerEmail, loginPassword:registerPassword}) === true) {
     const status = 401;
     const message = 'Email and Password already exist';
     res.status(status).json({status, message});

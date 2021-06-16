@@ -1,1 +1,27 @@
-{"users":[{"id":1,"email":"bruno@email.com","password":"bruno"},{"id":2,"email":"test@test.am","password":"123456","fullName":"Anun Azganun","date":"Sat Jun 18 2005 00:00:00 GMT+0500 (Armenia Summer Time)","phone":"+374 93 151618","gender":"male"}]}
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "bruno@email.com",
+      "password": "bruno"
+    },
+    {
+      "id": 2,
+      "email": "sam@sam.am",
+      "password": "123456",
+      "fullName": "Samvel Karapetyan",
+      "date": "Mon Jun 02 1958 00:00:00 GMT+0400 (Armenia Standard Time)",
+      "phone": "+37455888888",
+      "gender": "male"
+    },
+    {
+      "id": 3,
+      "email": "a@a.am",
+      "password": "123456",
+      "fullName": "Anun Azganun",
+      "date": "Tue Jun 15 2021 00:00:00 GMT+0400 (Armenia Standard Time)",
+      "phone": "+374589658",
+      "gender": "female"
+    }
+  ]
+}
