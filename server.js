@@ -42,7 +42,8 @@ server.post('/auth/register', (req, res) => {
     registerFullName,
     registerDate,
     registerPhone,
-    registerGender
+    registerGender,
+    orders
   } = req.body;
 
   if(isAuthenticated({loginEmail: registerEmail, loginPassword:registerPassword}) === true) {
@@ -73,7 +74,8 @@ fs.readFile("./users.json", (err, data) => {
       fullName: registerFullName,
       date: registerDate,
       phone: registerPhone,
-      gender: registerGender
+      gender: registerGender,
+      orders:orders
     }); //add some data
     var writeData = fs.writeFile("./users.json", JSON.stringify(data), (err, result) => {  // WRITE
         if (err) {
@@ -92,7 +94,8 @@ fs.readFile("./users.json", (err, data) => {
     registerFullName,
     registerDate,
     registerPhone,
-    registerGender
+    registerGender,
+    orders
   })
   console.log("Access Token:" + access_token);
   res.status(200).json({access_token})
