@@ -26,17 +26,26 @@ function verifyToken(token){
 }
 
 // Check if the user exists in database
-function isAuthenticated({email, password}){
-  return userdb.users.findIndex(user => user.email === email && user.password === password) !== -1
+
+function isAuthenticated({loginEmail, loginPassword}){
+  return userdb.users.findIndex(user => user.email === loginEmail && user.password === loginPassword) !== -1
 }
 
 // Register New User
 server.post('/auth/register', (req, res) => {
   console.log("register endpoint called; request body:");
 
-  const {email, password, fullName, date, phone, gender} = req.body;
+  const {
+    registerEmail,
+    registerPassword,
+    registerFullName,
+    registerDate,
+    registerPhone,
+    registerGender
+  } = req.body;
 
-  if(isAuthenticated({email, password}) === true) {
+  if(isAuthenticated({registerEmail, registerPassword}) === true) {
+
     const status = 401;
     const message = 'Email and Password already exist';
     res.status(status).json({status, message});
@@ -57,7 +66,15 @@ fs.readFile("./users.json", (err, data) => {
     var last_item_id = data.users[data.users.length-1].id;
 
     //Add new user
-    data.users.push({id: last_item_id + 1, email: email, password: password, fullName: fullName, date: date, phone: phone, gender: gender}); //add some data
+    data.users.push({
+      id: last_item_id + 1,
+      email: registerEmail,
+      password: registerPassword,
+      fullName: registerFullName,
+      date: registerDate,
+      phone: registerPhone,
+      gender: registerGender
+    }); //add some data
     var writeData = fs.writeFile("./users.json", JSON.stringify(data), (err, result) => {  // WRITE
         if (err) {
           const status = 401
@@ -69,7 +86,14 @@ fs.readFile("./users.json", (err, data) => {
 });
 
 // Create token for new user
-  const access_token = createToken({email, password, fullName, date, phone, gender})
+  const access_token = createToken({
+    registerEmail,
+    registerPassword,
+    registerFullName,
+    registerDate,
+    registerPhone,
+    registerGender
+  })
   console.log("Access Token:" + access_token);
   res.status(200).json({access_token})
 })
@@ -78,8 +102,10 @@ fs.readFile("./users.json", (err, data) => {
 server.post('/auth/login', (req, res) => {
   console.log("login endpoint called; request body:");
 
-  const {email, password} = req.body;
-  if (isAuthenticated({email, password}) === false) {
+  const {loginEmail, loginPassword} = req.body;
+
+  if (isAuthenticated({loginEmail, loginPassword}) === false) {
+
     const status = 401
     const message = 'Incorrect email or password'
     res.status(status).json({status, message})
@@ -87,11 +113,12 @@ server.post('/auth/login', (req, res) => {
   }
 
   fs.readFile('./users.json', (err, data) => {
+
     if (err) throw err;
     let json = JSON.parse(data);
     let currentUser = null;
     json.users.forEach((user)=>{
-      if (user.email === email && user.password === password){
+      if (user.email === loginEmail && user.password === loginPassword){
         currentUser = user
       }
     })
@@ -102,6 +129,86 @@ server.post('/auth/login', (req, res) => {
   });
 
 })
+
+server.put('/auth/change-password', (req, res)=>{
+
+  const {editProfileCurrentPassword, editProfileNewPassword, loginEmail, loginPassword} = req.body;
+
+  if (isAuthenticated({loginEmail, loginPassword}) === false) {
+    const status = 401
+    const message = 'Incorrect email or password'
+    res.status(status).json({status, message})
+    return
+  }
+
+  fs.readFile('./users.json',  (err, data)=>{
+    if (err) throw err;
+    let json = JSON.parse(data);
+    let currentUser = null;
+
+    json.users.forEach((user)=>{
+      if (user.password === editProfileCurrentPassword && user.email === loginEmail){
+        user.password = editProfileNewPassword
+        currentUser = user
+        json.users.splice(json.users.indexOf(user), 1, currentUser);
+      }
+    })
+
+    const access_token = createToken(currentUser)
+
+    fs.writeFile('./users.json', JSON.stringify(json), (err)=>{
+          if (err){
+            console.log(err)
+          }
+        })
+
+    res.status(200).json({access_token, user:currentUser})
+  });
+})
+
+
+server.put('/auth/edit-profile', (req, res)=>{
+
+  const {editProfileDate, editProfileEmail, editProfileFullName, editProfileGender, editProfilePhone, loginEmail, loginPassword} = req.body;
+
+  if (isAuthenticated({loginEmail, loginPassword}) === false) {
+    const status = 401
+    const message = 'Incorrect email or password'
+    res.status(status).json({status, message})
+    return
+  }
+
+  fs.readFile('./users.json',  (err, data)=>{
+    if (err) throw err;
+    let json = JSON.parse(data);
+    let currentUser = null;
+
+    json.users.forEach((user)=>{
+      if (user.password === loginPassword && user.email === loginEmail){
+        user.fullName = editProfileFullName
+        user.phone = editProfilePhone
+        user.gender = editProfileGender
+        user.email = editProfileEmail
+        user.date = editProfileDate
+        currentUser = user
+        json.users.splice(json.users.indexOf(user), 1, currentUser);
+      }
+    })
+
+    const access_token = createToken(currentUser)
+
+    fs.writeFile('./users.json', JSON.stringify(json), (err)=>{
+      if (err){
+        console.log(err)
+      }
+    })
+
+    res.status(200).json({access_token, user:currentUser})
+  });
+})
+
+
+
 
 server.use(/^(?!\/auth).*$/,  (req, res, next) => {
 
